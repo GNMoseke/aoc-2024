@@ -38,7 +38,72 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let reports = advent_of_code::file_util::split_to_nested_vec(input);
+    // brute force it baby - this is a dynamic programming problem but fuck that, the input size is
+    // 10000
+    let mut sum = 0;
+    for report in reports {
+        if check_report(report.into_iter().map(|x| x as i32).collect()) {
+            sum += 1;
+            continue;
+        }
+    }
+    Some(sum)
+}
+
+fn check_report(report: Vec<i32>) -> bool {
+    // brute force it with some more functional chains
+    let cloned = report.clone();
+    let head_iter = cloned.iter();
+    let tail_iter = cloned.iter().skip(1);
+    let unmodified_check_diffs: Vec<i32> = head_iter.zip(tail_iter).map(|(x, y)| y - x).collect();
+
+    // all increasing/decreasing and within range of one another
+    match (unmodified_check_diffs
+        .clone()
+        .into_iter()
+        .clone()
+        .all(|x| x < 0)
+        || unmodified_check_diffs
+            .clone()
+            .into_iter()
+            .clone()
+            .all(|x| x > 0))
+        && unmodified_check_diffs
+            .clone()
+            .into_iter()
+            .all(|x| x.abs() >= 1 && x.abs() <= 3)
+    {
+        true => return true,
+        false => {
+            for (idx, _) in report.iter().enumerate() {
+                let mut with_dropped = report.clone();
+                with_dropped.remove(idx);
+                let head_iter_d = with_dropped.iter();
+                let tail_iter_d = with_dropped.iter().skip(1);
+                let unmodified_check_diffs_d: Vec<i32> =
+                    head_iter_d.zip(tail_iter_d).map(|(x, y)| y - x).collect();
+                if (unmodified_check_diffs_d
+                    .clone()
+                    .into_iter()
+                    .clone()
+                    .all(|x| x < 0)
+                    || unmodified_check_diffs_d
+                        .clone()
+                        .into_iter()
+                        .clone()
+                        .all(|x| x > 0))
+                    && unmodified_check_diffs_d
+                        .clone()
+                        .into_iter()
+                        .all(|x| x.abs() >= 1 && x.abs() <= 3)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
 }
 
 #[cfg(test)]
@@ -54,6 +119,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(4));
     }
 }
