@@ -87,12 +87,65 @@ pub fn part_one(input: &str) -> Option<u32> {
             }
         }
     }
-
     Some(sum)
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let mut sum = 0;
+    // the beauty of aoc is that I can write garbage like this without feeling bad
+    let grid = to_grid(input);
+    let row_ct = grid.len();
+    let col_ct = grid[0].len();
+    for (row_idx, row) in grid.iter().enumerate() {
+        for (col_idx, col) in row.iter().enumerate() {
+            // MS top row
+            if row_idx + 2 < row_ct
+                && col_idx + 2 < col_ct
+                && *col == 'M'
+                && row[col_idx + 2] == 'S'
+                && grid[row_idx + 1][col_idx + 1] == 'A'
+                && grid[row_idx + 2][col_idx] == 'M'
+                && grid[row_idx + 2][col_idx + 2] == 'S'
+            {
+                sum += 1
+            }
+            // MM top row
+            if row_idx + 2 < row_ct
+                && col_idx + 2 < col_ct
+                && *col == 'M'
+                && row[col_idx + 2] == 'M'
+                && grid[row_idx + 1][col_idx + 1] == 'A'
+                && grid[row_idx + 2][col_idx] == 'S'
+                && grid[row_idx + 2][col_idx + 2] == 'S'
+            {
+                sum += 1
+            }
+            // SM top row
+            if row_idx + 2 < row_ct
+                && col_idx + 2 < col_ct
+                && *col == 'S'
+                && row[col_idx + 2] == 'M'
+                && grid[row_idx + 1][col_idx + 1] == 'A'
+                && grid[row_idx + 2][col_idx] == 'S'
+                && grid[row_idx + 2][col_idx + 2] == 'M'
+            {
+                sum += 1
+            }
+
+            // SS top row
+            if row_idx + 2 < row_ct
+                && col_idx + 2 < col_ct
+                && *col == 'S'
+                && row[col_idx + 2] == 'S'
+                && grid[row_idx + 1][col_idx + 1] == 'A'
+                && grid[row_idx + 2][col_idx] == 'M'
+                && grid[row_idx + 2][col_idx + 2] == 'M'
+            {
+                sum += 1
+            }
+        }
+    }
+    Some(sum)
 }
 
 fn to_grid(input: &str) -> Vec<Vec<char>> {
@@ -116,6 +169,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(9));
     }
 }
