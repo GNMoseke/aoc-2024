@@ -34,7 +34,41 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let (ordering, pages) = input.split_once("\n\n").unwrap();
+    let graph = parse_to_graph(ordering);
+    let mut invalid: Vec<Vec<u32>> = Vec::new();
+    let mut sum = 0;
+    'outer: for update_line in pages.trim().split('\n') {
+        let mut updates = update_line.split(',').map(|x| x.parse::<u32>().unwrap());
+        // this could be done more cleanly but I'm preferring to be explicit
+        let updates_copy: Vec<u32> = updates.clone().collect();
+        let mut curr = updates.next();
+        while curr != None {
+            let next = updates.next();
+            if next == None {
+                continue 'outer;
+            }
+            if !graph.contains_edge(curr.unwrap().into(), next.unwrap().into()) {
+                invalid.push(updates_copy);
+                continue 'outer;
+            }
+            curr = next;
+        }
+    }
+    for mut invalid_list in invalid {
+        // fix it - functionally sort by using the graph edges as a comparator
+        invalid_list.sort_by(|x, y| {
+            if graph.contains_edge((*x).into(), (*y).into()) {
+                std::cmp::Ordering::Less
+            } else {
+                std::cmp::Ordering::Greater
+            }
+        });
+        // making the assumption that all the results have an odd number of pages
+        sum += invalid_list[invalid_list.len() / 2]
+    }
+
+    Some(sum)
 }
 
 // NOTE: I've caved and am just using a graph library instead of writing my own parser because I am
@@ -118,6 +152,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(123));
     }
 }
