@@ -11,12 +11,19 @@ pub fn part_one(input: &str) -> Option<u64> {
             calib.1[1..].to_vec(),
             calib.0,
             &mut valid,
+            false,
         );
     }
     Some(valid.iter().sum())
 }
 
-fn check_calib(val: u64, remainder: Vec<u64>, target: u64, valid: &mut HashSet<u64>) {
+fn check_calib(
+    val: u64,
+    remainder: Vec<u64>,
+    target: u64,
+    valid: &mut HashSet<u64>,
+    enable_concat: bool,
+) {
     if remainder.len() > 0 {
         // stop recursing, we've either already solved or can no longer solve down this permutation
         if val > target || valid.contains(&target) {
@@ -27,8 +34,19 @@ fn check_calib(val: u64, remainder: Vec<u64>, target: u64, valid: &mut HashSet<u
         let mult = val * remainder.first().unwrap();
 
         // recurse for remaining permutations
-        check_calib(plus, remainder[1..].to_vec(), target, valid);
-        check_calib(mult, remainder[1..].to_vec(), target, valid);
+        check_calib(plus, remainder[1..].to_vec(), target, valid, enable_concat);
+        check_calib(mult, remainder[1..].to_vec(), target, valid, enable_concat);
+
+        if enable_concat {
+            let concatted = val.to_string() + &remainder.first().unwrap().to_string();
+            check_calib(
+                concatted.parse().unwrap(),
+                remainder[1..].to_vec(),
+                target,
+                valid,
+                enable_concat,
+            );
+        }
     } else {
         // no remaining permutations to check, see if we've solved
         if val == target {
@@ -38,7 +56,18 @@ fn check_calib(val: u64, remainder: Vec<u64>, target: u64, valid: &mut HashSet<u
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
-    None
+    let calibrations = parse(input);
+    let mut valid: HashSet<u64> = HashSet::new();
+    for calib in calibrations {
+        check_calib(
+            *calib.1.first().unwrap(),
+            calib.1[1..].to_vec(),
+            calib.0,
+            &mut valid,
+            true,
+        );
+    }
+    Some(valid.iter().sum())
 }
 
 fn parse(input: &str) -> Vec<(u64, Vec<u64>)> {
@@ -70,6 +99,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(11387));
     }
 }
