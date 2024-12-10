@@ -34,48 +34,30 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    let lines = input.lines().collect::<Vec<_>>();
-    let width = lines[0].len();
-    let height = lines.len();
-    let grid = lines
-        .iter()
-        .flat_map(|l| l.as_bytes())
-        .copied()
-        .collect::<Vec<_>>();
+    // this is a bfs problem
+    let (graph, start_positions) = parse_to_graph(input);
+    let mut answ = 0;
+    for start_pos in start_positions {
+        let mut queue: VecDeque<(u32, u32)> = VecDeque::new();
+    let mut sum = 0;
+        queue.push_back(start_pos);
+        while !queue.is_empty() {
+            let curr_pos = queue.pop_front().unwrap();
+            let node = graph[curr_pos.0 as usize][curr_pos.1 as usize];
 
-    let mut trailheads = Vec::new();
-    for y in 0..height {
-        for x in 0..width {
-            if grid[y * width + x] == b'0' {
-                trailheads.push((x as i32, y as i32, b'0'));
-            }
-        }
-    }
-
-    let mut total2 = 0;
-    for t in trailheads {
-        let mut queue = VecDeque::new();
-        queue.push_back(t);
-        let mut rating = 0;
-        while let Some(pos) = queue.pop_front() {
-            if pos.2 == b'9' {
-                rating += 1;
+            // if it's a 9, we're done with this branch
+            if node == 9 {
+                sum += 1;
                 continue;
             }
-            for d in [(1, 0), (-1, 0), (0, 1), (0, -1)] {
-                let nx = pos.0 + d.0;
-                let ny = pos.1 + d.1;
-                if nx >= 0 && ny >= 0 && nx < width as i32 && ny < height as i32 {
-                    let d = grid[ny as usize * width + nx as usize];
-                    if d == pos.2 + 1 {
-                        queue.push_back((nx, ny, d));
-                    }
-                }
+
+            for v in find_valid_edges(graph.clone(), curr_pos, node) {
+                    queue.push_back(v)
             }
         }
-        total2 += rating;
+        answ += sum;
     }
-    Some(total2)
+    Some(answ)
 }
 
 fn find_valid_edges(graph: Vec<Vec<u32>>, loc: (u32, u32), elev: u32) -> Vec<(u32, u32)> {
