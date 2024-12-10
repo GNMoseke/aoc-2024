@@ -34,7 +34,36 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    // this is (also) a bfs problem
+    let (graph, start_positions) = parse_to_graph(input);
+    let mut visited: HashMap<(u32, u32), bool> = HashMap::new();
+    let mut answ = 0;
+    for start_pos in start_positions {
+        let mut queue: VecDeque<(u32, u32)> = VecDeque::new();
+        let mut sum = 0;
+        visited.insert(start_pos, true);
+        queue.push_back(start_pos);
+        while !queue.is_empty() {
+            let curr_pos = queue.pop_front().unwrap();
+            let node = graph[curr_pos.0 as usize][curr_pos.1 as usize];
+
+            // if it's a 9, we're done with this branch
+            if node == 9 {
+                sum += 1;
+                continue;
+            }
+
+            for v in find_valid_edges(graph.clone(), curr_pos, node) {
+                if !visited.get(&v).or(Some(&false)).unwrap() {
+                    visited.insert(v, true);
+                    queue.push_back(v)
+                }
+            }
+        }
+        answ += sum;
+        visited.clear();
+    }
+    Some(answ)
 }
 
 fn find_valid_edges(graph: Vec<Vec<u32>>, loc: (u32, u32), elev: u32) -> Vec<(u32, u32)> {
@@ -57,7 +86,6 @@ fn find_valid_edges(graph: Vec<Vec<u32>>, loc: (u32, u32), elev: u32) -> Vec<(u3
     if loc.0 < (graph.len() - 1) as u32 && graph[(loc.0 + 1) as usize][loc.1 as usize] == elev + 1 {
         res.push((loc.0 + 1, loc.1))
     }
-    println!("loc: {:?}, elev: {}, valid_adj: {:?}", loc, elev, res);
     res
 }
 
@@ -95,6 +123,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(81));
     }
 }
